@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Crear la estructura de carpetas si no existe
+mkdir -p presentacion/animations/media
+mkdir -p cuadernos
+mkdir -p programas
+mkdir -p scripts
+mkdir -p presentacion/media/animaciones
+
+# Mover la carpeta animations dentro de presentacion
+if [ -d "./animations" ]; then
+    mv ./animations ./presentacion/
+    echo "Carpeta 'animations' movida correctamente a 'presentacion/'"
+else
+    echo "La carpeta 'animations' no se encontró en la raíz."
+fi
+
+# Mover el archivo de animación MiPrimeraEscena.mp4 a presentacion/media/animaciones
+if [ -f "./presentacion/animations/media/videos/mi_animacion/480p15/MiPrimeraEscena.mp4" ]; then
+    mv ./presentacion/animations/media/videos/mi_animacion/480p15/MiPrimeraEscena.mp4 ./presentacion/media/animaciones/
+    echo "Archivo 'MiPrimeraEscena.mp4' movido a 'presentacion/media/animaciones/'"
+else
+    echo "Advertencia: No se encontró el archivo 'MiPrimeraEscena.mp4' en la ruta esperada"
+fi
+
+# Mostrar un mensaje indicando que la estructura fue organizada
+echo "La estructura del proyecto ha sido organizada correctamente."

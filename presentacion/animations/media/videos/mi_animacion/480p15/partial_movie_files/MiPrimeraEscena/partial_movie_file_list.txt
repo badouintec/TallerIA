@@ -1,0 +1,4 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/juangamez/Documents/GitHub/TallerIA/animations/media/videos/mi_animacion/480p15/partial_movie_files/MiPrimeraEscena/1185818338_1236567180_223132457.mp4'
+file 'file:/Users/juangamez/Documents/GitHub/TallerIA/animations/media/videos/mi_animacion/480p15/partial_movie_files/MiPrimeraEscena/624642324_1141282389_3398440928.mp4'
+file 'file:/Users/juangamez/Documents/GitHub/TallerIA/animations/media/videos/mi_animacion/480p15/partial_movie_files/MiPrimeraEscena/624642324_2159070520_892461663.mp4'
