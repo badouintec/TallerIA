@@ -1,318 +1,531 @@
 from manim import *
-import numpy as np
+import sympy as sp
+from sympy import MatrixSymbol, HadamardProduct, Function, Eq, pretty
 
 class DetailedNeuralNetwork(Scene):
     def construct(self):
         # Configuración inicial de la escena
         self.setup_scene()
 
-        # Introducción visual con elementos gráficos
-        self.introduce_neural_network()
+        # Paso 1: Introducción visual con un dibujo de una neurona
+        self.introduce_neuron()
 
-        # Creación de las capas de la red neuronal
+        # Paso 2: Mostrar título y subtítulo brevemente, y luego ocultarlos
+        self.show_title_and_subtitle()
+
+        # Paso 3: Crear las capas de la red neuronal
         layers = self.create_network_layers()
 
-        # Conexión de las capas con animaciones detalladas
+        # Paso 4: Conectar las capas de la red neuronal
         connections = self.connect_network_layers(layers)
 
-        # Explicación de los componentes de la red neuronal
-        self.explain_components(layers)
+        # Paso 5: Explicación detallada de los elementos
+        self.explain_elements(layers, connections)
 
-        # Animación de la propagación hacia adelante
+        # Paso 6: Explicación de la propagación hacia adelante
+        self.explain_forward_propagation()
+
+        # Paso 7: Animar la propagación hacia adelante a través de la red
         self.animate_forward_propagation(layers, connections)
 
-        # Mostrar ecuaciones y explicar el funcionamiento matemático
-        self.show_equations()
-
-        # Simular el entrenamiento con retropropagación
+        # Paso 8: Simular retropropagación
         self.simulate_backpropagation(layers, connections)
 
-        # Conclusión y mensaje final
+        # Paso 9: Mostrar las ecuaciones correspondientes usando SymPy
+        self.show_equations()
+
+        # Paso 10: Conclusión final
         self.conclusion()
 
     def setup_scene(self):
-        # Paleta de colores agradable
+        """
+        Configuración inicial de la escena, con la definición de colores y fondo.
+        """
         self.colors = {
-            "background": "#D6EAF8",  # Azul claro para el fondo
-            "neuron": "#154360",      # Azul oscuro para las neuronas
-            "input": "#76D7C4",       # Verde agua para la capa de entrada
-            "hidden": "#F5B041",      # Naranja para capas ocultas
-            "output": "#E74C3C",      # Rojo para la capa de salida
-            "connection": "#1F618D",  # Azul para las conexiones
-            "active": "#F4D03F",      # Amarillo para activación
-            "text": "#1B2631"         # Gris oscuro para el texto
+            "background": "#2E4053",
+            "neuron": "#F0B27A",
+            "input": "#52BE80",
+            "hidden": "#AF7AC5",
+            "output": "#E74C3C",
+            "connection": "#85C1E9",
+            "active": "#F1C40F",
+            "text": "#FFFFFF",
+            "highlight": "#F1948A"
         }
-
-        # Configurar el fondo
         self.camera.background_color = self.colors["background"]
 
-    def introduce_neural_network(self):
-        # Título principal con animación
-        title = Text(
-            "Visualización Detallada de una Red Neuronal",
-            font_size=48,
-            color=self.colors["text"]
-        ).to_edge(UP)
+    def introduce_neuron(self):
+        """
+        Introducción visual con un dibujo de una neurona sencilla.
+        """
+        # Cuerpo de la neurona
+        neuron_body = Circle(
+            radius=0.5,
+            color=self.colors["neuron"],
+            fill_color=self.colors["neuron"],
+            fill_opacity=1
+        ).shift(UP * 2)
 
-        # Imagen representativa de una neurona (opcional)
-        # Asegúrate de tener 'neuron.svg' en tu directorio
-        neuron_image = SVGMobject("neuron.svg").scale(1.5)
-        neuron_image.set_fill(self.colors["input"], opacity=1)
-        neuron_image.set_stroke(color=self.colors["neuron"], width=2)
-        neuron_image.next_to(title, DOWN, buff=0.5)
+        # Dendritas
+        dendrites = VGroup(
+            Line(neuron_body.get_left(), neuron_body.get_left() + LEFT * 1.0, color=self.colors["connection"], stroke_opacity=0.6),
+            Line(neuron_body.get_top(), neuron_body.get_top() + UP * 1.0, color=self.colors["connection"], stroke_opacity=0.6),
+            Line(neuron_body.get_bottom(), neuron_body.get_bottom() + DOWN * 1.0, color=self.colors["connection"], stroke_opacity=0.6),
+            Line(neuron_body.get_right(), neuron_body.get_right() + RIGHT * 1.0, color=self.colors["connection"], stroke_opacity=0.6)
+        )
+
+        # Axón
+        axon = Line(neuron_body.get_right(), neuron_body.get_right() + RIGHT * 2.0, color=self.colors["connection"], stroke_opacity=0.6)
+        axon_terminal = VGroup(
+            Line(axon.get_end(), axon.get_end() + UP * 0.3, color=self.colors["connection"], stroke_opacity=0.6),
+            Line(axon.get_end(), axon.get_end() + DOWN * 0.3, color=self.colors["connection"], stroke_opacity=0.6)
+        )
+
+        neuron = VGroup(neuron_body, dendrites, axon, axon_terminal)
+
+        # Añadir etiqueta a la neurona
+        neuron_label = Text("Neurona", font_size=24, color=self.colors["text"], font="Arial").next_to(neuron_body, DOWN)
+        neuron_group = VGroup(neuron, neuron_label)
 
         # Animación de introducción
-        self.play(
-            Write(title),
-            FadeIn(neuron_image, shift=DOWN)
-        )
-        self.wait(2)
-        self.play(FadeOut(neuron_image))
+        self.play(FadeIn(neuron, shift=UP), Write(neuron_label))
+        self.wait(1)
+        self.play(FadeOut(neuron_group))
 
-        # Breve explicación
-        intro_text = Text(
-            "Las redes neuronales son modelos computacionales inspirados\n"
-            "en el cerebro humano. Aprenden ajustando pesos sinápticos\n"
-            "para realizar tareas complejas.",
-            font_size=28,
-            color=self.colors["text"]
-        )
-        intro_text.next_to(title, DOWN, buff=1.0)
-        self.play(Write(intro_text))
-        self.wait(4)
-        self.play(FadeOut(intro_text))
+    def show_title_and_subtitle(self):
+        """
+        Mostrar título y subtítulo brevemente y luego ocultarlos.
+        """
+        title = Text(
+            "Visualización de una Red Neuronal",
+            font_size=48,
+            color=self.colors["text"],
+            font="Arial"
+        ).to_edge(UP)
+
+        subtitle = Text(
+            "Inspirada en la estructura del cerebro humano",
+            font_size=32,
+            color=self.colors["text"],
+            font="Arial"
+        ).next_to(title, DOWN)
+
+        # Animación de entrada
+        self.play(FadeIn(title, shift=DOWN), FadeIn(subtitle, shift=DOWN))
+        self.wait(2)
+
+        # Animación de salida
+        self.play(FadeOut(title, shift=DOWN), FadeOut(subtitle, shift=DOWN))
 
     def create_network_layers(self):
-        # Crear las capas de la red neuronal con animaciones atractivas
-        input_layer = self.create_layer(4, LEFT * 5, "Capa de Entrada", self.colors["input"])
-        hidden_layer1 = self.create_layer(5, LEFT * 2, "Capa Oculta 1", self.colors["hidden"])
-        hidden_layer2 = self.create_layer(5, RIGHT * 1, "Capa Oculta 2", self.colors["hidden"])
-        output_layer = self.create_layer(3, RIGHT * 5, "Capa de Salida", self.colors["output"])
+        """
+        Crea las capas de la red neuronal con neuronas visualizadas como círculos.
+        """
+        # Definir número de neuronas por capa
+        self.layer_sizes = [5, 7, 7, 5, 3]  # Ejemplo: 5 entradas, tres capas ocultas de 7, 5 y 3 salidas
 
-        layers = [input_layer, hidden_layer1, hidden_layer2, output_layer]
+        # Posiciones horizontales para cada capa
+        layer_positions = [LEFT * 6, LEFT * 3, ORIGIN, RIGHT * 3, RIGHT * 6]
+
+        # Definir tipos de capas
+        layer_types = ['input', 'hidden', 'hidden', 'hidden', 'output']
+
+        layers = []
+
+        for i, (size, position, layer_type) in enumerate(zip(self.layer_sizes, layer_positions, layer_types)):
+            if layer_type == 'input':
+                label_text = "Entrada"
+                neuron_color = self.colors["input"]
+            elif layer_type == 'output':
+                label_text = "Salida"
+                neuron_color = self.colors["output"]
+            else:
+                label_text = f"Capa Oculta {i}"  # Numeración de capas ocultas
+                neuron_color = self.colors["hidden"]
+
+            layer = self.create_layer(size, position, label_text, neuron_color)
+            layers.append(layer)
+
+        self.layers = layers  # Guardar las capas para uso posterior
         return layers
 
     def create_layer(self, n_neurons, position, label_text, neuron_color):
-        # Crear neuronas con diseño mejorado
+        """
+        Crea una capa de neuronas en una posición específica.
+        """
         neurons = VGroup()
-        for i in range(n_neurons):
-            neuron = Circle(radius=0.3, color=self.colors["neuron"], fill_opacity=1)
+        for _ in range(n_neurons):
+            neuron = Circle(
+                radius=0.3,
+                color=self.colors["neuron"],
+                fill_opacity=1
+            )
             neuron.set_fill(neuron_color, opacity=0.9)
             neurons.add(neuron)
 
-        neurons.arrange(DOWN, buff=0.5).move_to(position)
+        neurons.arrange(DOWN, buff=0.6).move_to(position)
 
-        # Etiqueta de la capa con fondo y borde
-        label_bg = Rectangle(
-            width=3.5,
-            height=0.6,
-            fill_color=self.colors["background"],
-            fill_opacity=1,
-            stroke_color=self.colors["neuron"],
-            stroke_width=1
-        ).next_to(neurons, UP, buff=0.2)
-        label = Text(label_text, font_size=24, color=self.colors["text"]).move_to(label_bg.get_center())
+        # Añadir etiqueta a la capa
+        label = Text(label_text, font_size=24, color=self.colors["text"], font="Arial").next_to(neurons, UP, buff=0.5)
 
-        # Mostrar neuronas y etiqueta con animación
+        # Animación de creación de la capa
         self.play(
-            LaggedStart(*[DrawBorderThenFill(neuron) for neuron in neurons], lag_ratio=0.1),
-            FadeIn(label_bg),
-            Write(label)
+            LaggedStart(*[GrowFromCenter(neuron) for neuron in neurons], lag_ratio=0.1),
+            FadeIn(label, shift=UP)
         )
 
-        # Devolver un diccionario con neuronas y etiqueta para futuras referencias
         return {"neurons": neurons, "label": label, "color": neuron_color}
 
     def connect_network_layers(self, layers):
+        """
+        Conecta las capas de la red neuronal usando líneas que representan las conexiones.
+        """
         connections = []
+
         for i in range(len(layers) - 1):
-            conn = self.connect_layers(layers[i], layers[i + 1])
+            layer1 = layers[i]
+            layer2 = layers[i + 1]
+            conn = self.connect_layers(layer1, layer2)
             connections.append(conn)
+
+        self.connections = connections  # Guardar conexiones para uso posterior
         return connections
 
     def connect_layers(self, layer1, layer2):
-        # Conectar neuronas entre dos capas con líneas curvas
+        """
+        Conecta dos capas de la red neuronal dibujando líneas entre las neuronas.
+        """
         connections = VGroup()
         for neuron1 in layer1["neurons"]:
             for neuron2 in layer2["neurons"]:
-                line = CubicBezier(
+                line = Line(
                     neuron1.get_right(),
-                    neuron1.get_right() + RIGHT * 0.5,
-                    neuron2.get_left() + LEFT * 0.5,
                     neuron2.get_left(),
-                    stroke_width=1.5,
-                    color=self.colors["connection"]
+                    stroke_width=1.0,
+                    color=self.colors["connection"],
+                    stroke_opacity=0.6  # Reemplazar 'opacity' con 'stroke_opacity'
                 )
                 connections.add(line)
-        self.play(Create(connections, run_time=2))
-        # Guardar las conexiones para animaciones futuras
+
+        # Animación de conexiones
+        self.play(Create(connections), run_time=1.5)
+
         layer2["connections_in"] = connections
         return connections
 
-    def explain_components(self, layers):
-        # Resaltar una neurona y explicar su función
-        sample_neuron = layers[1]["neurons"][2].copy()
-        sample_neuron.set_fill(self.colors["active"], opacity=1)
-        self.play(Indicate(sample_neuron, scale_factor=1.2))
+    def explain_elements(self, layers, connections):
+        """
+        Explicación detallada de las neuronas y conexiones.
+        """
+        # Explicación de las neuronas
         neuron_explanation = Text(
-            "Las neuronas procesan la información recibida y generan una salida.",
+            "Las neuronas son unidades básicas que reciben, procesan y transmiten información.",
             font_size=24,
-            color=self.colors["text"]
+            color=self.colors["text"],
+            font="Arial",
+            t2c={"neuronas": self.colors["neuron"]}
         ).to_edge(DOWN)
-        self.play(Write(neuron_explanation))
-        self.wait(3)
-        self.play(FadeOut(neuron_explanation), sample_neuron.animate.set_fill(layers[1]["color"], opacity=0.9))
 
-        # Resaltar una conexión y explicar su función
-        sample_connection = layers[1]["connections_in"][5].copy()
-        sample_connection.set_stroke(self.colors["active"], width=3)
-        self.play(Indicate(sample_connection, scale_factor=1.05))
-        connection_explanation = Text(
-            "Las conexiones representan los pesos que determinan la influencia entre neuronas.",
-            font_size=24,
-            color=self.colors["text"]
-        ).to_edge(DOWN)
-        self.play(Write(connection_explanation))
+        # Animación de entrada
+        self.play(FadeIn(neuron_explanation, shift=UP))
         self.wait(3)
-        self.play(FadeOut(connection_explanation), sample_connection.animate.set_stroke(self.colors["connection"], width=1.5))
+
+        # Resaltar una neurona de entrada
+        input_layer = layers[0]  # Asumiendo que la primera capa es de entrada
+        sample_neuron = input_layer["neurons"][0]
+        self.play(
+            sample_neuron.animate.set_fill(self.colors["highlight"], opacity=1).scale(1.2)
+        )
+        self.wait(1)
+
+        # Añadir una flecha apuntando a la neurona resaltada
+        arrow = Arrow(
+            start=LEFT * 5,
+            end=sample_neuron.get_left(),
+            buff=0.1,
+            color=self.colors["highlight"]
+        )
+        self.play(GrowArrow(arrow))
+        self.wait(2)
+
+        # Explicación de las conexiones
+        connection_explanation = Text(
+            "Las líneas representan las conexiones sinápticas entre las neuronas,\n"
+            "a través de las cuales se transmite la información.",
+            font_size=24,
+            color=self.colors["text"],
+            font="Arial",
+            t2c={"conexiones sinápticas": self.colors["connection"]}
+        ).to_edge(DOWN)
+
+        self.play(FadeOut(neuron_explanation), FadeOut(arrow))
+        self.play(FadeIn(connection_explanation, shift=UP))
+        self.wait(3)
+
+        # Resaltar una conexión
+        sample_connection = connections[0][0]  # Primera conexión de la primera capa
+        self.play(
+            sample_connection.animate.set_color(self.colors["highlight"]).set_stroke(width=2)
+        )
+        self.wait(1)
+
+        # Añadir una flecha apuntando a la conexión resaltada
+        arrow_conn = Arrow(
+            start=LEFT * 5,
+            end=sample_connection.get_center(),
+            buff=0.1,
+            color=self.colors["highlight"]
+        )
+        self.play(GrowArrow(arrow_conn))
+        self.wait(2)
+
+        # Finalizar explicaciones
+        self.play(FadeOut(connection_explanation), FadeOut(arrow_conn), FadeOut(sample_connection))
+
+    def explain_forward_propagation(self):
+        """
+        Explicación de la propagación hacia adelante.
+        """
+        explanation_text = Text(
+            "La información se propaga hacia adelante\n"
+            "desde la capa de entrada hasta la capa de salida.",
+            font_size=28,
+            color=self.colors["text"],
+            font="Arial",
+            t2c={"información": self.colors["active"], "propaga hacia adelante": self.colors["active"]}
+        ).to_edge(DOWN)
+
+        self.play(FadeIn(explanation_text, shift=UP))
+        self.wait(3)
+        self.play(FadeOut(explanation_text, shift=DOWN))
 
     def animate_forward_propagation(self, layers, connections):
-        # Animar la propagación de información con mejores animaciones
+        """
+        Simula el proceso de propagación hacia adelante.
+        """
         propagation_text = Text(
-            "Propagación hacia adelante (Forward Propagation)",
-            font_size=28,
-            color=self.colors["text"]
-        ).to_edge(DOWN)
-        self.play(Write(propagation_text))
+            "Propagación hacia adelante",
+            font_size=32,
+            color=self.colors["active"],
+            font="Arial"
+        ).to_edge(UP)
 
-        # Resaltar neuronas y conexiones en secuencia con animaciones suaves
+        self.play(FadeIn(propagation_text, shift=DOWN))
+        self.wait(1)
+
         for i in range(len(layers) - 1):
             current_layer = layers[i]
             next_layer = layers[i + 1]
             current_connections = connections[i]
 
-            # Resaltar neuronas actuales
+            # Resaltar neuronas de la capa actual
             self.play(*[
-                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.1)
+                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.2)
                 for neuron in current_layer["neurons"]
             ], run_time=0.5)
 
             # Resaltar conexiones
             self.play(*[
-                ShowPassingFlash(
-                    conn.copy().set_stroke(self.colors["active"], width=2),
-                    time_width=0.5,
-                    run_time=1
-                )
+                conn.animate.set_color(self.colors["active"]).set_stroke(width=2)
                 for conn in current_connections
-            ])
+            ], run_time=1)
 
-            # Resaltar neuronas siguientes
+            # Resaltar neuronas de la siguiente capa
             self.play(*[
-                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.1)
+                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.2)
                 for neuron in next_layer["neurons"]
             ], run_time=0.5)
 
-            self.wait(1)
+            self.wait(0.5)
 
             # Restaurar colores y tamaños originales
             self.play(*[
-                neuron.animate.set_fill(current_layer["color"], opacity=0.9).scale(1/1.1)
+                neuron.animate.set_fill(current_layer["color"], opacity=0.9).scale(1/1.2)
                 for neuron in current_layer["neurons"]
             ] + [
-                neuron.animate.set_fill(next_layer["color"], opacity=0.9).scale(1/1.1)
+                conn.animate.set_color(self.colors["connection"]).set_stroke(width=1)
+                for conn in current_connections
+            ] + [
+                neuron.animate.set_fill(next_layer["color"], opacity=0.9).scale(1/1.2)
                 for neuron in next_layer["neurons"]
             ], run_time=0.5)
 
-        self.play(FadeOut(propagation_text))
-
-    def show_equations(self):
-        # Mostrar ecuaciones y explicar el funcionamiento matemático
-        equations = VGroup(
-            Tex(r"$z^{(l)} = W^{(l)} a^{(l-1)} + b^{(l)}$", font_size=36, color=self.colors["text"]),
-            Tex(r"$a^{(l)} = f(z^{(l)})$", font_size=36, color=self.colors["text"]),
-            Tex(r"$f$: \text{Función de activación (ej. ReLU, Sigmoide)}$", font_size=28, color=self.colors["text"])
-        ).arrange(DOWN, buff=0.5)
-        equations.to_edge(UP)
-
-        self.play(Write(equations))
-        self.wait(4)
-        self.play(FadeOut(equations))
+        self.play(FadeOut(propagation_text, shift=DOWN))
+        self.wait(1)
 
     def simulate_backpropagation(self, layers, connections):
-        # Simular el proceso de entrenamiento con retropropagación
+        """
+        Simula el proceso de retropropagación.
+        """
         backprop_text = Text(
-            "Retropropagación (Backpropagation)",
-            font_size=28,
-            color=self.colors["text"]
-        ).to_edge(DOWN)
-        self.play(Write(backprop_text))
+            "Retropropagación",
+            font_size=32,
+            color=self.colors["active"],
+            font="Arial"
+        ).to_edge(UP)
 
-        # Resaltar neuronas y conexiones en secuencia inversa
+        self.play(FadeIn(backprop_text, shift=DOWN))
+        self.wait(1)
+
         for i in reversed(range(len(layers) - 1)):
             current_layer = layers[i + 1]
             previous_layer = layers[i]
             current_connections = connections[i]
 
-            # Resaltar neuronas actuales (salida)
+            # Resaltar neuronas de la capa actual
             self.play(*[
-                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.1)
+                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.2)
                 for neuron in current_layer["neurons"]
             ], run_time=0.5)
 
-            # Resaltar conexiones inversas
+            # Resaltar conexiones (invertidas)
             self.play(*[
-                ShowPassingFlash(
-                    conn.copy().set_stroke(self.colors["active"], width=2),
-                    time_width=0.5,
-                    run_time=1
-                )
+                conn.animate.set_color(self.colors["active"]).set_stroke(width=2)
                 for conn in current_connections
-            ])
+            ], run_time=1)
 
-            # Resaltar neuronas anteriores
+            # Resaltar neuronas de la capa previa
             self.play(*[
-                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.1)
+                neuron.animate.set_fill(self.colors["active"], opacity=1).scale(1.2)
                 for neuron in previous_layer["neurons"]
             ], run_time=0.5)
 
-            self.wait(1)
+            self.wait(0.5)
 
             # Restaurar colores y tamaños originales
             self.play(*[
-                neuron.animate.set_fill(current_layer["color"], opacity=0.9).scale(1/1.1)
+                neuron.animate.set_fill(current_layer["color"], opacity=0.9).scale(1/1.2)
                 for neuron in current_layer["neurons"]
             ] + [
-                neuron.animate.set_fill(previous_layer["color"], opacity=0.9).scale(1/1.1)
+                conn.animate.set_color(self.colors["connection"]).set_stroke(width=1)
+                for conn in current_connections
+            ] + [
+                neuron.animate.set_fill(previous_layer["color"], opacity=0.9).scale(1/1.2)
                 for neuron in previous_layer["neurons"]
             ], run_time=0.5)
 
-        # Mostrar texto explicativo
-        update_text = Text(
-            "Ajuste de pesos para minimizar el error",
-            font_size=24,
-            color=self.colors["text"]
-        ).next_to(backprop_text, UP, buff=0.5)
-        self.play(Write(update_text))
-        self.wait(3)
-        self.play(FadeOut(backprop_text), FadeOut(update_text))
+        self.play(FadeOut(backprop_text, shift=DOWN))
+        self.wait(1)
+
+    def show_equations(self):
+        """
+        Muestra las ecuaciones de propagación hacia adelante y retropropagación usando SymPy con Text y Unicode.
+        """
+        # Definir símbolos y ecuaciones con SymPy
+        l = 0  # índice de la capa actual
+
+        # Verificar que hay al menos dos capas para definir W(l)
+        if len(self.layer_sizes) < 2:
+            raise ValueError("Se requieren al menos dos capas para definir las ecuaciones.")
+
+        # Definir W_l con dimensiones correctas
+        W_l = MatrixSymbol(f'W_{l}', self.layer_sizes[l+1], self.layer_sizes[l])
+
+        # Definir vectores de activación y bias como MatrixSymbols
+        a_l = MatrixSymbol(f'a_{l}', self.layer_sizes[l], 1)
+        b_l = MatrixSymbol(f'b_{l}', self.layer_sizes[l+1], 1)
+
+        # Definir z_l y la función de activación
+        z_l = W_l * a_l + b_l
+        f_z_l = Function('f')(z_l)  # [7,1]
+
+        # Ecuación de propagación hacia adelante
+        a_next = MatrixSymbol(f'a_{l+1}', self.layer_sizes[l+1], 1)
+        forward_eq = Eq(a_next, f_z_l, evaluate=False)  # 'a₁ = f(z₀)'
+
+        # Definir delta para retropropagación
+        delta_prev = MatrixSymbol(f'delta_{l+1}', self.layer_sizes[l+1], 1)
+        delta_l = MatrixSymbol(f'delta_{l}', self.layer_sizes[l], 1)
+
+        # Ecuación de retropropagación
+        f_prime_z_l = Function('f_prime')(z_l)  # [7,1]
+        Hadamard = HadamardProduct(delta_prev, f_prime_z_l)  # Multiplicación elemento a elemento [7,1]
+        backward_eq = Eq(delta_l, W_l.transpose() * Hadamard, evaluate=False)  # 'delta₀ = W₀ᵀ ⋅ (HadamardProduct(delta₁, f_prime(z₀)))'
+
+        # Convertir ecuaciones a cadenas con formato legible usando SymPy's pretty
+        forward_eq_str = pretty(forward_eq, use_unicode=True)
+        backward_eq_str = pretty(backward_eq, use_unicode=True)
+
+        # **Depuración: Imprimir las ecuaciones para verificar su formato**
+        print(f"forward_eq_str: '{forward_eq_str}'")
+        print(f"backward_eq_str: '{backward_eq_str}'")
+
+        # Crear objetos Text en Manim para cada ecuación
+        # Usar una fuente monoespaciada para mejorar la alineación
+        forward_eq_text = Text(forward_eq_str, font_size=24, font="Consolas", color=self.colors["text"], line_spacing=0.8).to_edge(UP)
+        backward_eq_text = Text(backward_eq_str, font_size=24, font="Consolas", color=self.colors["text"], line_spacing=0.8).next_to(forward_eq_text, DOWN, buff=0.8)
+
+        # Ajustar el tamaño y posición para evitar recortes
+        forward_eq_text.scale(0.8).to_edge(UP + LEFT * 0.5)
+        backward_eq_text.scale(0.8).next_to(forward_eq_text, DOWN, buff=0.8)
+
+        # Mostrar ecuaciones
+        self.play(FadeIn(forward_eq_text, shift=UP))
+        self.wait(2)
+        self.play(FadeIn(backward_eq_text, shift=UP))
+        self.wait(2)
+
+        # Resaltar 'a₁' en la ecuación de propagación hacia adelante
+        highlight_forward = 'a₁'
+        if highlight_forward in forward_eq_str:
+            # Encontrar la posición de 'a₁' en la cadena
+            index = forward_eq_str.find(highlight_forward)
+            # Calcular el desplazamiento basado en el índice
+            total_length = len(forward_eq_str)
+            text_width = forward_eq_text.width
+            char_width = text_width / total_length
+            highlight_position = forward_eq_text.get_left() + RIGHT * (index * char_width + char_width / 2)
+
+            # Crear un objeto Text para resaltar
+            highlighted_forward = Text(highlight_forward, font_size=24, font="Consolas", color=self.colors["highlight"]).move_to(highlight_position)
+
+            # Animar el resaltado
+            self.play(FadeIn(highlighted_forward))
+            self.wait(1)
+            self.play(FadeOut(highlighted_forward))
+        else:
+            print(f"No se encontró '{highlight_forward}' en la ecuación de propagación hacia adelante.")
+
+        # Resaltar 'delta₀' en la ecuación de retropropagación
+        highlight_backward = 'delta₀'
+        if highlight_backward in backward_eq_str:
+            # Encontrar la posición de 'delta₀' en la cadena
+            index = backward_eq_str.find(highlight_backward)
+            # Calcular el desplazamiento basado en el índice
+            total_length = len(backward_eq_str)
+            text_width = backward_eq_text.width
+            char_width = text_width / total_length
+            highlight_position = backward_eq_text.get_left() + RIGHT * (index * char_width + char_width / 2)
+
+            # Crear un objeto Text para resaltar
+            highlighted_backward = Text(highlight_backward, font_size=24, font="Consolas", color=self.colors["highlight"]).move_to(highlight_position)
+
+            # Animar el resaltado
+            self.play(FadeIn(highlighted_backward))
+            self.wait(1)
+            self.play(FadeOut(highlighted_backward))
+        else:
+            print(f"No se encontró '{highlight_backward}' en la ecuación de retropropagación.")
+
+        self.wait(2)
+
+        # Finalizar mostrando las ecuaciones
+        self.play(FadeOut(VGroup(forward_eq_text, backward_eq_text)))
 
     def conclusion(self):
-        # Conclusión y mensaje final
+        """
+        Conclusión de la animación con un mensaje final.
+        """
         conclusion_text = Text(
             "Las redes neuronales aprenden ajustando los pesos de las conexiones\n"
             "mediante la propagación hacia adelante y la retropropagación del error.",
             font_size=28,
-            color=self.colors["text"]
+            color=self.colors["text"],
+            font="Arial",
+            t2c={"propagación hacia adelante": self.colors["active"], "retropropagación": self.colors["active"]}
         ).to_edge(DOWN)
 
-        # Añadir una imagen o gráfico representativo (opcional)
-        # Asegúrate de tener 'brain.svg' en tu directorio
-        brain_image = SVGMobject("brain.svg").scale(1.5)
-        brain_image.set_fill(self.colors["output"], opacity=1)
-        brain_image.set_stroke(color=self.colors["neuron"], width=2)
-        brain_image.next_to(conclusion_text, UP, buff=0.5)
-
-        self.play(FadeIn(brain_image, shift=UP), Write(conclusion_text))
+        # Animación de conclusión
+        self.play(FadeIn(conclusion_text, shift=UP))
         self.wait(4)
-        self.play(FadeOut(conclusion_text), FadeOut(brain_image))
+        self.play(FadeOut(conclusion_text, shift=DOWN))
