@@ -1,91 +1,200 @@
+# basic_algebra.py
 from manim import *
 
-class BasicAlgebra(Scene):
+class BasicAlgebraEnhanced(Scene):
     def construct(self):
-        # Configuración del fondo blanco
-        self.camera.background_color = "#FFFFFF"
+        # Definir una paleta de colores en tonos de azul, negro, gris y blanco
+        self.colors = {
+            "background": "#FFFFFF",   # Blanco
+            "primary": "#1E88E5",      # Azul medio
+            "secondary": "#1565C0",    # Azul oscuro
+            "accent": "#90CAF9",       # Azul claro
+            "text": "#000000",         # Negro para texto
+            "highlight": "#757575",    # Gris para resaltar
+        }
 
-        # Título de la escena con tipografía más clara
-        title = Text("Conceptos Básicos de Álgebra", font="Arial", color="#000000").scale(0.9)
+        # Configuración del fondo
+        self.camera.background_color = self.colors["background"]
+
+        # Título centrado
+        title = Text(
+            "Conceptos Básicos de Álgebra",
+            font="Arial",
+            color=self.colors["primary"]
+        ).scale(1.2)
         title.to_edge(UP)
-        self.play(FadeIn(title, shift=DOWN))
+        underline = Line(LEFT, RIGHT, color=self.colors["accent"]).match_width(title).next_to(title, DOWN, buff=0.1)
+        self.play(Write(title), Create(underline))
         self.wait(1)
 
-        # Cuadro de diálogo explicativo con fuente más agradable
-        dialog_box = RoundedRectangle(corner_radius=0.1, height=1, width=10, color="#4682B4").to_edge(DOWN)
-        dialog_text = Text("Comenzamos con la ecuación x + 3 = 7", font="Arial", color="#000000").scale(0.55)
-        dialog_text.move_to(dialog_box.get_center())
-        self.play(FadeIn(dialog_box), Write(dialog_text))
+        # Cuadro de diálogo inicial con contexto sobre ecuaciones e igualdades
+        dialog = self.create_dialog(r"Una ecuación es una igualdad entre dos expresiones matemáticas.", animate=True)
+        self.wait(2)
+
+        # Actualizar diálogo para introducir la ecuación
+        self.update_dialog(dialog, r"Resolveremos la ecuación $x + 3 = 7$ para encontrar el valor de $x$.")
         self.wait(2)
 
         # Mostrar la ecuación principal centrada
-        equation = MathTex("x + 3 = 7", color="#4682B4").scale(1.5)
-        equation.move_to(UP * 1)
+        equation = MathTex("x + 3 = 7", color=self.colors["text"], font_size=72)
+        equation.next_to(title, DOWN, buff=1)
         self.play(Write(equation))
         self.wait(2)
 
-        # Actualizar cuadro de diálogo para explicar el siguiente paso
-        self.update_dialog(dialog_text, "Representamos visualmente 'x' y '3'.")
-        self.wait(2)
-
-        # Elementos visuales: 'x' como cuadrado y '3' como círculos
-        x_square = Square(side_length=1, color="#4682B4", fill_opacity=0.3).move_to(LEFT * 2)
-        x_label = MathTex("x", color="#4682B4").move_to(x_square)
-        three_circles = VGroup(
-            *[Circle(radius=0.2, color="#000000", fill_opacity=0.3).next_to(x_square, RIGHT, buff=0.3 * i) for i in range(1, 4)]
+        # Enfatizar cada término con colores
+        self.play(
+            equation.animate.set_color_by_tex("x", self.colors["primary"])
+                            .set_color_by_tex("3", self.colors["accent"])
+                            .set_color_by_tex("7", self.colors["secondary"])
         )
-        self.play(FadeIn(x_square), Write(x_label), FadeIn(three_circles))
         self.wait(2)
 
-        # Mostrar el resultado a la derecha
-        total_box = Rectangle(width=1.5, height=1, color="#4682B4", fill_opacity=0.3).move_to(RIGHT * 2)
-        total_label = MathTex("7", color="#4682B4").move_to(total_box)
-        self.play(FadeIn(total_box), Write(total_label))
+        # Actualizar diálogo
+        self.update_dialog(dialog, "Representemos gráficamente cada término.")
         self.wait(2)
 
-        # Actualizar cuadro de diálogo para explicar la resta
-        self.update_dialog(dialog_text, "Restamos 3 de ambos lados.")
+        # Crear y posicionar los elementos gráficos
+        x_square = Square(
+            side_length=1,
+            color=self.colors["primary"],
+            fill_color=self.colors["primary"],
+            fill_opacity=0.8
+        )
+        x_label = MathTex("x", color=WHITE, font_size=36).move_to(x_square.get_center())
+        x_group = VGroup(x_square, x_label)
+
+        plus_sign = MathTex("+", color=self.colors["text"], font_size=48)
+
+        three_circles = VGroup(*[
+            Circle(
+                radius=0.3,
+                color=self.colors["accent"],
+                fill_color=self.colors["accent"],
+                fill_opacity=0.8
+            ) for _ in range(3)
+        ]).arrange(RIGHT, buff=0.3)
+
+        equal_sign = MathTex("=", color=self.colors["text"], font_size=48)
+
+        seven_squares = VGroup(*[
+            Square(
+                side_length=0.5,
+                color=self.colors["secondary"],
+                fill_color=self.colors["secondary"],
+                fill_opacity=0.8
+            ) for _ in range(7)
+        ]).arrange(RIGHT, buff=0.2)
+
+        # Agrupar y centrar los elementos
+        left_side = VGroup(x_group, plus_sign, three_circles).arrange(RIGHT, buff=0.5)
+        right_side = VGroup(equal_sign, seven_squares).arrange(RIGHT, buff=0.5)
+
+        equation_group = VGroup(left_side, right_side).arrange(RIGHT, buff=1)
+        equation_group.next_to(equation, DOWN, buff=1)
+
+        # Mostrar representación gráfica con animaciones
+        self.play(FadeIn(equation_group))
         self.wait(2)
 
-        # Desaparecer los círculos de '3' y otros elementos visuales con animación suave
-        self.play(three_circles.animate.shift(UP * 1).set_opacity(0), run_time=1.5)
+        # Actualizar diálogo
+        self.update_dialog(dialog, "Restamos 3 de ambos lados para despejar $x$.")
+        self.wait(2)
+
+        # Animación de resta y eliminación del signo '+'
+        self.play(
+            FadeOut(plus_sign, shift=UP),
+            FadeOut(three_circles, shift=UP),
+            FadeOut(seven_squares[-3:], shift=UP),
+            run_time=2
+        )
         self.wait(1)
 
-        # Quitar elementos visuales para dar espacio
-        self.play(FadeOut(x_square, shift=LEFT), FadeOut(x_label, shift=LEFT), FadeOut(total_box, shift=RIGHT), FadeOut(total_label, shift=RIGHT))
+        # Reorganizar los elementos restantes
+        remaining_squares = VGroup(*seven_squares[:4]).arrange(RIGHT, buff=0.2)
+        right_side = VGroup(equal_sign, remaining_squares).arrange(RIGHT, buff=0.5)
+
+        # Actualizar el lado izquierdo para mostrar solo 'x'
+        left_side = x_group  # sin el '+'
+
+        equation_group = VGroup(left_side, right_side).arrange(RIGHT, buff=1)
+        equation_group.next_to(equation, DOWN, buff=1)
+
+        # Actualizar la escena
+        self.play(
+            left_side.animate.move_to(equation_group.get_left()),
+            run_time=1
+        )
         self.wait(1)
 
-        # Mostrar el paso intermedio 'x = 7 - 3'
-        step1 = MathTex("x = 7 - 3", color="#000000").scale(1.3)
-        step1.move_to(UP * 1)
-        self.play(Transform(equation, step1))
+        # Mostrar nueva ecuación simplificada
+        equation2 = MathTex("x = 4", color=self.colors["text"], font_size=72)
+        equation2.move_to(equation.get_center())
+        self.play(Transform(equation, equation2))
         self.wait(2)
 
-        # Actualización del cuadro de diálogo para simplificar
-        self.update_dialog(dialog_text, "Simplificamos la ecuación.")
+        # Actualizar diálogo
+        self.update_dialog(dialog, "¡Hemos encontrado que $x = 4$!")
         self.wait(2)
 
-        # Transformar al resultado final 'x = 4'
-        step2 = MathTex("x = 4", color="#4682B4").scale(1.3)
-        step2.move_to(UP * 1)
-        self.play(Transform(step1, step2))
+        # Destacar la solución
+        self.play(Indicate(equation, color=self.colors["highlight"], scale_factor=1.2))
         self.wait(2)
 
-        # Desaparecer la ecuación anterior para limpiar la pantalla
-        self.play(FadeOut(equation))
+        # Desvanecer elementos
+        self.play(
+            FadeOut(title, shift=UP),
+            FadeOut(underline, shift=UP),
+            FadeOut(dialog),
+            FadeOut(equation),
+            FadeOut(equation_group),
+            run_time=3
+        )
         self.wait(1)
 
-        # Mostrar el resultado final centrado
-        final_answer = Text("Solución: x = 4", font="Arial", color="#4682B4").scale(1.1)
-        final_answer.move_to(DOWN * 1)
-        self.play(Write(final_answer))
-        self.wait(2)
+    def create_dialog(self, message, animate=False):
+        # Cuadro de diálogo centrado en la parte inferior
+        bubble_base = RoundedRectangle(
+            corner_radius=0.2,
+            width=12,  # Ancho del cuadro de diálogo
+            height=2,  # Altura del cuadro de diálogo
+            color=self.colors["accent"],
+            fill_color=self.colors["accent"],
+            fill_opacity=0.1
+        )
 
-        # Mensaje final en el cuadro de diálogo
-        self.update_dialog(dialog_text, "¡Hemos resuelto la ecuación correctamente!")
-        self.wait(2)
+        # Definir la cola del cuadro de diálogo
+        tail = Polygon(
+            bubble_base.get_bottom() + DOWN * 0.5,
+            bubble_base.get_bottom() + DOWN * 0.7 + LEFT * 0.5,
+            bubble_base.get_bottom() + DOWN * 0.7 + RIGHT * 0.5,
+            color=self.colors["accent"],
+            fill_color=self.colors["accent"],
+            fill_opacity=0.1
+        )
 
-    def update_dialog(self, dialog_text, new_message):
-        new_dialog = Text(new_message, font="Arial", color="#000000").scale(0.55)
-        new_dialog.move_to(dialog_text.get_center())
-        self.play(Transform(dialog_text, new_dialog))
+        bubble = VGroup(bubble_base, tail)
+        bubble.to_edge(DOWN, buff=0.1)  # Posicionar en la parte inferior
+
+        # Texto centrado en el cuadro de diálogo
+        dialog_text = Tex(
+            message,
+            font_size=30,
+            color=self.colors["text"],
+            # font="Arial",  # Eliminamos este argumento
+        ).move_to(bubble_base.get_center())
+
+        if animate:
+            self.play(FadeIn(bubble), Write(dialog_text))
+        else:
+            self.add(bubble, dialog_text)
+        return VGroup(bubble, dialog_text)
+
+    def update_dialog(self, dialog, new_message):
+        dialog_text = dialog[1]
+        new_dialog_text = Tex(
+            new_message,
+            font_size=30,
+            color=self.colors["text"],
+            # font="Arial",  # Eliminamos este argumento
+        ).move_to(dialog_text.get_center())
+        self.play(Transform(dialog_text, new_dialog_text))
